@@ -249,6 +249,39 @@ get_linux_x86_64_levels(kdump_ctx_t *ctx, int *levels)
 	return KDUMP_OK;
 }
 
+
+/**  Determine number of paging levels for aarch64 Linux OS.
+ * @param ctx	  Dump file object.
+ * @param levels  Set to number of levels on success.
+ * @returns	  Error status.
+ *
+ * If VA_BITS from VMCOREINFO is unknown, @c levels is unchanged, and
+ * this function returns success. If VA_BITS is avaliable calculate the
+ * level based on it.
+ */
+static kdump_status
+get_linux_aarch64_levels(kdump_ctx_t *ctx, int *levels)
+{
+	int va_bits;
+	static const char va_bits_str[] = "VA_BITS";
+	struct attr_data *attr;
+
+	attr = lookup_dir_attr(ctx->dict, gattr(ctx, GKI_linux_number),
+			       va_bits_str, sizeof(va_bits_str) - 1);
+	if (attr && attr_isset(attr)) {
+		kdump_status status = attr_revalidate(ctx, attr);
+		if (status != KDUMP_OK)
+			return set_error(ctx, status,
+					 "Cannot get %s from vmcoreinfo",
+					 va_bits_str);
+		va_bits = attr_value(attr)->number;
+		*levels = (va_bits - 12) / 9;
+
+	}
+	return KDUMP_OK;
+}
+
+
 /**  Add "levels=" addrxlat option if possible.
  * @param ctx   Dump file object.
  * @param opts  Options.
@@ -272,6 +305,10 @@ set_linux_levels_opt(kdump_ctx_t *ctx, struct opts *opts)
 
 	case ARCH_X86_64:
 		status = get_linux_x86_64_levels(ctx, &levels);
+		break;
+
+	case ARCH_AARCH64:
+		status = get_linux_aarch64_levels(ctx, &levels);
 		break;
 
 	default:
