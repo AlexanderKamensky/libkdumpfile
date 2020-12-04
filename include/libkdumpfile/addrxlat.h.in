@@ -263,6 +263,14 @@ typedef enum _addrxlat_sym_type {
 	 * - @c val = @c offsetof(args[0],args[1])
 	 */
 	ADDRXLAT_SYM_OFFSETOF,
+
+	/** Number value.
+	 * Input:
+	 * - @c args[0] = number name
+	 * Output:
+	 * - @c val = number value
+	 */
+	ADDRXLAT_SYM_NUMBER,
 } addrxlat_sym_type_t;
 
 /** Maximum argument count for @ref addrxlat_sym_t. */
